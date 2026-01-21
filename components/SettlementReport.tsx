@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { User, Expense, SettlementResult } from '../types';
 import { calculateSettlement } from '../services/splitLogic';
 import { generateSummaryMessage } from '../services/geminiService';
-import { Calculator, Send, Copy, ArrowRight, Wallet, Sparkles, Loader2 } from 'lucide-react';
+import { Calculator, Send, Copy, ArrowRight, Wallet, Sparkles, Loader2, Share2 } from 'lucide-react';
 
 interface Props {
   users: User[];
@@ -123,20 +123,19 @@ export const SettlementReport: React.FC<Props> = ({ users, expenses }) => {
         </div>
       </div>
 
-      {/* AI Assistant Section */}
+      {/* Share Section */}
       <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-6 text-white shadow-xl">
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-bold flex items-center text-yellow-300">
-                <Sparkles className="w-5 h-5 mr-2" />
-                AI 智能總結助手
+                <Share2 className="w-5 h-5 mr-2" />
+                分享結算結果 (Share Results)
             </h2>
-            <span className="text-xs bg-gray-700 px-2 py-1 rounded border border-gray-600">Powered by Gemini</span>
         </div>
         
         {!aiMessage ? (
             <div className="text-center py-6">
                 <p className="text-gray-300 mb-4 text-sm">
-                    覺得 Cap 圖太麻煩？讓 AI 幫你寫一段禮貌又清楚的 WhatsApp 訊息發給朋友吧！
+                   一鍵生成文字版結算，方便發送到 WhatsApp / Signal 群組！
                 </p>
                 <button
                     onClick={handleGenerateAi}
