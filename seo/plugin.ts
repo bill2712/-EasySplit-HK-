@@ -1,45 +1,16 @@
-// Build step that turns the single-page app into crawlable landing pages:
-// one static HTML page per language (title, description, FAQ, tipping guide,
-// hreflang, Open Graph, JSON-LD), plus sitemap.xml and robots.txt.
-// The React app replaces the static content in #root once it loads.
+// Build step that turns the single-page app into crawlable pages:
+// - one landing page per language (title, description, FAQ, tipping table,
+//   hreflang, Open Graph, JSON-LD); React replaces the static content on load
+// - static content pages: tipping guide per country, privacy, terms, about, 404
+// - sitemap.xml and robots.txt
 
 import type { Plugin } from 'vite';
-import en from '../src/i18n/locales/en';
-import zhHK from '../src/i18n/locales/zh-HK';
-import zhCN from '../src/i18n/locales/zh-CN';
-import ja from '../src/i18n/locales/ja';
-import ko from '../src/i18n/locales/ko';
-import th from '../src/i18n/locales/th';
-import es from '../src/i18n/locales/es';
-import fr from '../src/i18n/locales/fr';
-import de from '../src/i18n/locales/de';
 import { COUNTRIES } from '../src/lib/countries';
 import { tipRange } from '../src/lib/guide';
-import { KOFI_URL, LANG_SLUGS, SITE_URL, type LangCode } from '../src/lib/site';
-
-type Dict = typeof en;
-const DICTS: Record<LangCode, Partial<Dict>> = { en, 'zh-HK': zhHK, 'zh-CN': zhCN, ja, ko, th, es, fr, de };
-const LANGS = Object.keys(LANG_SLUGS) as LangCode[];
-const NATIVE: Record<LangCode, string> = {
-  en: 'English', 'zh-HK': '繁體中文', 'zh-CN': '简体中文', ja: '日本語', ko: '한국어', th: 'ไทย', es: 'Español', fr: 'Français', de: 'Deutsch',
-};
-const OG_LOCALE: Record<LangCode, string> = {
-  en: 'en_US', 'zh-HK': 'zh_HK', 'zh-CN': 'zh_CN', ja: 'ja_JP', ko: 'ko_KR', th: 'th_TH', es: 'es_ES', fr: 'fr_FR', de: 'de_DE',
-};
-const HTML_LANG: Record<LangCode, string> = {
-  en: 'en', 'zh-HK': 'zh-Hant-HK', 'zh-CN': 'zh-Hans-CN', ja: 'ja', ko: 'ko', th: 'th', es: 'es', fr: 'fr', de: 'de',
-};
-
-const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-const pageUrl = (lang: LangCode) => SITE_URL + (LANG_SLUGS[lang] ? `${LANG_SLUGS[lang]}/` : '');
-
-function tr(lang: LangCode) {
-  return (key: keyof Dict, vars?: Record<string, string>) => {
-    let s = DICTS[lang][key] ?? en[key];
-    if (vars) for (const [k, v] of Object.entries(vars)) s = s.split(`{${k}}`).join(v);
-    return s;
-  };
-}
+import { KOFI_URL } from '../src/lib/site';
+import { HTML_LANG, LANGS, LANG_SLUGS, NATIVE, OG_LOCALE, SITE_URL, BASE, esc, langPath, pageUrl, regionName, tr, type Dict, type LangCode } from './shared';
+import { contentPages } from './pages';
+import { LEGAL } from './legal';
 
 function head(lang: LangCode): string {
   const t = tr(lang);
@@ -89,14 +60,6 @@ function head(lang: LangCode): string {
     <script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`;
 }
 
-function regionName(code: string, lang: LangCode): string {
-  try {
-    return new Intl.DisplayNames([HTML_LANG[lang], 'en'], { type: 'region' }).of(code) ?? code;
-  } catch {
-    return code;
-  }
-}
-
 function body(lang: LangCode): string {
   const t = tr(lang);
   const features: [keyof Dict, keyof Dict][] = [
@@ -115,12 +78,13 @@ function body(lang: LangCode): string {
       const tax = c.tax ? `${c.tax}% (${c.taxIncluded ? t('guide.included') : t('guide.added')})` : t('guide.noneUsual');
       const range = tipRange(c);
       const tip = t(`tip.${c.tipCulture}` as keyof Dict) + (range ? ` ${range}` : '');
-      return `<tr><td>${esc(name)}</td><td>${esc(c.currency)}</td><td>${esc(service)}</td><td>${esc(tax)}</td><td>${esc(tip)}</td></tr>`;
+      return `<tr><td><a href="${BASE}${langPath(lang, `tipping/${c.code.toLowerCase()}/`)}">${esc(name)}</a></td><td>${esc(c.currency)}</td><td>${esc(service)}</td><td>${esc(tax)}</td><td>${esc(tip)}</td></tr>`;
     })
     .join('');
   const faq = [1, 2, 3, 4, 5, 6]
     .map((i) => `<h3>${esc(t(`faq.q${i}` as keyof Dict))}</h3><p>${esc(t(`faq.a${i}` as keyof Dict))}</p>`)
     .join('');
+  const legal = (k: string) => (LEGAL[lang] ? langPath(lang, `${k}/`) : `${k}/`);
   const langNav = LANGS.map((l) => `<a href="${pageUrl(l)}" hreflang="${HTML_LANG[l]}"${l === lang ? ' aria-current="page"' : ''}>${NATIVE[l]}</a>`).join(' · ');
 
   return `<div class="seo">
@@ -144,7 +108,7 @@ function body(lang: LangCode): string {
           <thead><tr><th></th><th>${esc(t('picker.currency'))}</th><th>${esc(t('extras.service'))}</th><th>${esc(t('extras.tax'))}</th><th>${esc(t('extras.tip'))}</th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
-        <p><small>${esc(t('guide.disclaimer'))}</small></p>
+        <p><small>${esc(t('guide.disclaimer'))}</small> · <a href="${BASE}${langPath(lang, 'tipping/')}">${esc(t('guide.title'))}</a></p>
       </section>
       <section>
         <h2>${esc(t('faq.title'))}</h2>
@@ -153,6 +117,7 @@ function body(lang: LangCode): string {
       <footer>
         <p>${esc(t('home.privacy'))}</p>
         <p><a href="${KOFI_URL}" rel="noopener">☕ ${esc(t('support.button'))}</a></p>
+        <p><a href="${BASE}${legal('about')}">${esc(t('footer.about'))}</a> · <a href="${BASE}${legal('privacy')}">${esc(t('footer.privacy'))}</a> · <a href="${BASE}${legal('terms')}">${esc(t('footer.terms'))}</a></p>
         <nav aria-label="${esc(t('seo.languages'))}">${langNav}</nav>
       </footer>
     </div>`;
@@ -182,10 +147,21 @@ export function seoPlugin(): Plugin {
         this.emitFile({ type: 'asset', fileName: `${LANG_SLUGS[lang]}/index.html`, source: render(template, lang) });
       }
       const today = new Date().toISOString().slice(0, 10);
-      const urls = LANGS.map((l) => {
+      const landing = LANGS.map((l) => {
         const links = LANGS.map((x) => `<xhtml:link rel="alternate" hreflang="${HTML_LANG[x]}" href="${pageUrl(x)}"/>`).join('');
         return `<url><loc>${pageUrl(l)}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>${l === 'en' ? '1.0' : '0.9'}</priority>${links}</url>`;
-      }).join('\n');
+      });
+      const pages = contentPages();
+      for (const p of pages) this.emitFile({ type: 'asset', fileName: p.path.endsWith('/') ? `${p.path}index.html` : p.path, source: p.html });
+      const content = pages
+        .filter((p) => p.sitemap)
+        .map((p) => {
+          const links = Object.entries(p.alternates)
+            .map(([l, path]) => `<xhtml:link rel="alternate" hreflang="${HTML_LANG[l as LangCode]}" href="${SITE_URL}${path}"/>`)
+            .join('');
+          return `<url><loc>${SITE_URL}${p.path}</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority>${links}</url>`;
+        });
+      const urls = [...landing, ...content].join('\n');
       this.emitFile({
         type: 'asset',
         fileName: 'sitemap.xml',

@@ -11,6 +11,9 @@ export interface Settings {
   lang: Lang;
   theme: Theme;
   country: string;
+  lastBackupAt?: number;
+  backupNudgeDismissedAt?: number;
+  installNudgeDismissed?: boolean;
 }
 
 export interface QuickPerson {
@@ -131,10 +134,21 @@ export function getState(): AppState {
   return state;
 }
 
+type ChangeListener = (next: AppState, prev: AppState) => void;
+const changeListeners = new Set<ChangeListener>();
+
+/** Low-level change feed with the previous state (used by live sync). */
+export function onStateChange(l: ChangeListener) {
+  changeListeners.add(l);
+  return () => changeListeners.delete(l);
+}
+
 export function setState(fn: (s: AppState) => AppState) {
+  const prev = state;
   state = fn(state);
   persist();
   listeners.forEach((l) => l());
+  if (state !== prev) changeListeners.forEach((l) => l(state, prev));
 }
 
 function subscribe(l: () => void) {

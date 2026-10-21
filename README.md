@@ -31,8 +31,19 @@ A bill-splitting calculator for meals, gatherings and trips — built for people
 - **Who paid** in the quick calculator, **trip budget per person**, **search & filter** expenses, **duplicate** an expense.
 - Install button (PWA) and an FAQ.
 
+### 🤝 Live sharing
+Turn on live sharing for a group and send the link: everyone who opens it sees new expenses instantly and can add their own, even offline (changes sync when they're back online). It runs on Firebase Cloud Firestore. The long random id in the link is the only key, and nobody can list or search groups (see `firestore.rules`). Without a Firebase config the feature is hidden and everything else works as before.
+
+### 🛡️ Keeping data safe
+Groups live on the device. The app asks the browser for persistent storage, shows iPhone users how to add it to the Home Screen (Safari can clear site data after 7 days), and reminds people to download a backup.
+
 ### 🔎 SEO
-The build (`seo/plugin.ts`) writes a crawlable landing page for each language (`/`, `/zh-hk/`, `/zh-cn/`, `/ja/`, `/ko/`, `/th/`, `/es/`, `/fr/`, `/de/`). Each page has a localised title and description, FAQ, tipping table, hreflang links, Open Graph image and JSON-LD (WebApplication + FAQPage). The build also writes `sitemap.xml` and `robots.txt`.
+The build (`seo/`) writes:
+- a crawlable landing page for each language (`/`, `/zh-hk/`, `/zh-cn/`, `/ja/`, `/ko/`, `/th/`, `/es/`, `/fr/`, `/de/`) with a localised title, description, FAQ, tipping table, hreflang links, Open Graph image and JSON-LD
+- a **tipping guide page for every country in every language** (`/ja/tipping/us/` …, about 300 pages). Each has the local service charge, tax and tipping custom, a worked dinner-for-four example, FAQ + breadcrumb JSON-LD, and a button that opens the calculator with that country's presets
+- privacy, terms and about pages, a 404 page, `sitemap.xml` and `robots.txt`
+
+These content pages are plain HTML (no app JavaScript), so they load fast and are easy to crawl.
 
 ### ☕ Support
 EasySplit is free and ad-free. If it helps you, you can support it on [Ko-fi](https://ko-fi.com/beyond01hk).
@@ -63,11 +74,26 @@ All money maths runs in integer minor units, using largest-remainder allocation,
 
 ```bash
 npm install
-npm run dev        # http://localhost:3000/-EasySplit-HK-/
-npm test           # unit tests for the bill & settlement maths
-npm run build      # type-check + production build
-npm run deploy     # publish dist/ to GitHub Pages by hand
+npm run dev            # http://localhost:3000/-EasySplit-HK-/
+npm test               # unit tests (bill maths, settlement, sync model)
+npm run test:emulator  # live-sharing tests against the Firestore emulator (needs Java)
+npm run test:e2e       # Playwright UI tests, incl. two browsers sharing a live group
+npm run build          # type-check + production build
+npm run deploy         # publish dist/ to GitHub Pages by hand
 ```
+
+## Live sharing setup (Firebase)
+
+1. Create a free project at <https://console.firebase.google.com> (Analytics can stay off).
+2. **Build → Firestore Database → Create database** in production mode. Pick a region near your users (e.g. `asia-east2`, Hong Kong).
+3. Open the **Rules** tab, paste the contents of [`firestore.rules`](firestore.rules) and click **Publish**.
+4. **Project settings → General → Your apps → Web (`</>`)**: register an app and copy `apiKey`, `authDomain`, `projectId` and `appId`.
+5. In GitHub: **Settings → Secrets and variables → Actions → Variables**, add `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID` and `FIREBASE_APP_ID`. These values are public by design, so variables are fine.
+6. Run **Actions → Test & deploy → Run workflow**. The live sharing option appears in each group's ⋯ menu.
+
+Recommended: in Google Cloud Console, restrict the API key to your site's domain, and set a budget alert. The free Spark plan covers small groups comfortably.
+
+For local development, put the same values in `.env.local` as `VITE_FIREBASE_API_KEY=…` and so on.
 
 ## Deployment
 

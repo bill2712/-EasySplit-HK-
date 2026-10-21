@@ -16,6 +16,13 @@ export function useRoute(): string[] {
   return path.split('?')[0].split('/').filter(Boolean);
 }
 
+/** Query parameters inside the hash route, e.g. #/quick?c=JP. */
+export function routeQuery(): URLSearchParams {
+  const h = window.location.hash.replace(/^#/, '');
+  const i = h.indexOf('?');
+  return new URLSearchParams(i >= 0 ? h.slice(i + 1) : '');
+}
+
 export function navigate(path: string, replace = false) {
   const url = `#${path}`;
   if (replace) {

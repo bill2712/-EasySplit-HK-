@@ -7,6 +7,7 @@ import { actions } from '../state/store';
 import { navigate } from '../router';
 import { SupportCard } from '../components/extras';
 import { TopBar, cx } from '../components/ui';
+import { contentHref } from '../lib/site';
 
 const TIP_STYLE: Record<string, string> = {
   none: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
@@ -17,7 +18,7 @@ const TIP_STYLE: Record<string, string> = {
 
 /** Service charge, tax and tipping customs around the world. */
 export function Guide() {
-  const { t, locale } = useI18n();
+  const { t, locale, lang } = useI18n();
   const [q, setQ] = useState('');
   const list = useMemo(() => {
     const rows = COUNTRIES.filter((c) => c.code !== 'XX')
@@ -76,7 +77,12 @@ export function Guide() {
                     </div>
                   )}
                 </dl>
-                <p className="mt-3 text-[13px] text-zinc-600 dark:text-zinc-300">{t(`tipHint.${c.tipCulture}` as Key)}</p>
+                <p className="mt-3 text-[13px] text-zinc-600 dark:text-zinc-300">
+                  {t(`tipHint.${c.tipCulture}` as Key)}{' '}
+                  <a className="font-medium text-brand-700 underline-offset-2 hover:underline dark:text-brand-300" href={contentHref(import.meta.env.BASE_URL, lang, `tipping/${c.code.toLowerCase()}/`)}>
+                    {t('tp.readMore')}
+                  </a>
+                </p>
                 <div className="mt-3 flex flex-wrap items-center gap-1.5">
                   {c.payApps.map((a) => (
                     <span key={a} className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">

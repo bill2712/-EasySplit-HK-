@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Coffee, Download, Heart } from 'lucide-react';
-import QRCode from 'qrcode';
-import { KOFI_URL } from '../lib/site';
+import { KOFI_URL, contentHref } from '../lib/site';
 import { useI18n } from '../i18n';
 import { Button, Sheet, copyText, cx, toast } from './ui';
 
@@ -57,8 +56,9 @@ export function QrSheet({ open, onClose, url, title }: { open: boolean; onClose:
     let alive = true;
     setFailed(false);
     setSvg(null);
-    QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'L', color: { dark: '#18181b', light: '#ffffff' } })
-      .then((s) => alive && setSvg(s))
+    import('qrcode')
+      .then((QRCode) => QRCode.toString(url, { type: 'svg', margin: 1, errorCorrectionLevel: 'L', color: { dark: '#18181b', light: '#ffffff' } })
+      .then((s) => alive && setSvg(s)))
       .catch(() => alive && setFailed(true));
     return () => {
       alive = false;
@@ -128,5 +128,27 @@ export function InstallButton() {
     >
       <Download className="h-4 w-4" /> {t('install.button')}
     </button>
+  );
+}
+
+/** About · Privacy · Terms links to the static pages. */
+export function LegalLinks({ className }: { className?: string }) {
+  const { t, lang } = useI18n();
+  const base = import.meta.env.BASE_URL;
+  return (
+    <nav className={cx('flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400', className)}>
+      <a className="hover:underline" href={contentHref(base, lang, 'about/', true)}>
+        {t('footer.about')}
+      </a>
+      <a className="hover:underline" href={contentHref(base, lang, 'privacy/', true)}>
+        {t('footer.privacy')}
+      </a>
+      <a className="hover:underline" href={contentHref(base, lang, 'terms/', true)}>
+        {t('footer.terms')}
+      </a>
+      <a className="hover:underline" href={contentHref(base, lang, 'tipping/')}>
+        {t('guide.title')}
+      </a>
+    </nav>
   );
 }

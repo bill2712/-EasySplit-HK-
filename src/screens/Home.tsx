@@ -10,7 +10,8 @@ import { navigate } from '../router';
 import { CountryPicker, CurrencyPicker } from '../components/pickers';
 import { Avatar, Button, Field, Section, Sheet, TextField, cx } from '../components/ui';
 import { SettingsSheet } from './Settings';
-import { InstallButton, SupportCard } from '../components/extras';
+import { InstallButton, LegalLinks, SupportCard } from '../components/extras';
+import { SafetyNudges } from '../components/SafetyNudges';
 
 const KINDS: { kind: GroupKind; emoji: string; label: Key; hint: Key }[] = [
   { kind: 'meal', emoji: '🍽️', label: 'kind.meal', hint: 'kind.mealHint' },
@@ -98,6 +99,8 @@ export function Home() {
             <ArrowRight className="mt-1 h-5 w-5 shrink-0 transition group-hover:translate-x-1" />
           </div>
         </button>
+
+        <SafetyNudges />
 
         {/* Groups */}
         <Section
@@ -204,7 +207,10 @@ export function Home() {
 
         <SupportCard />
 
-        <p className="pb-4 text-center text-xs text-zinc-400">{t('home.privacy')}</p>
+        <div className="space-y-2 pb-4 text-center">
+          <p className="text-xs text-zinc-400">{t('home.privacy')}</p>
+          <LegalLinks />
+        </div>
       </main>
 
       {createKind && <CreateGroupSheet initialKind={createKind} onClose={() => setCreateKind(null)} />}

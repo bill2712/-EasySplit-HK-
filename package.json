@@ -10,9 +10,13 @@
     "test": "vitest run",
     "typecheck": "tsc",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "test:emulator": "firebase emulators:exec --only firestore --project demo-easysplit 'vitest run src/lib/cloud'",
+    "build:e2e": "VITE_FIREBASE_API_KEY=demo VITE_FIREBASE_PROJECT_ID=demo-easysplit VITE_FIREBASE_APP_ID=demo VITE_FIRESTORE_EMULATOR=127.0.0.1:8080 vite build --outDir dist-e2e",
+    "test:e2e": "npm run build:e2e && firebase emulators:exec --only firestore --project demo-easysplit 'playwright test'"
   },
   "dependencies": {
+    "firebase": "^13.1.0",
     "lucide-react": "^0.562.0",
     "lz-string": "^1.5.0",
     "qrcode": "^1.5.4",
@@ -20,12 +24,14 @@
     "react-dom": "^19.2.3"
   },
   "devDependencies": {
+    "@playwright/test": "1.56.1",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^22.14.0",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "firebase-tools": "^15.34.0",
     "gh-pages": "^6.3.0",
     "tailwindcss": "^4.3.3",
     "typescript": "~5.8.2",

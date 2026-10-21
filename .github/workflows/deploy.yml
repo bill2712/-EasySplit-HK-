@@ -24,9 +24,45 @@ jobs:
           node-version: 22
           cache: npm
 
+      # The Firestore emulator (live sharing tests) needs Java.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: firebase-emulators-${{ hashFiles('package-lock.json') }}
+
       - run: npm ci
       - run: npm test
-      - run: npm run build
+
+      - name: Live sharing tests (Firestore emulator)
+        run: npm run test:emulator
+
+      - name: Install browser for UI tests
+        run: npx playwright install --with-deps chromium
+
+      - name: UI tests (Playwright)
+        run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
+      # Live sharing turns on when these repository variables are set
+      # (Settings → Secrets and variables → Actions → Variables).
+      - name: Production build
+        run: npm run build
+        env:
+          VITE_FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_APP_ID: ${{ vars.FIREBASE_APP_ID }}
 
       # Publish dist/ to the gh-pages branch (GitHub Pages source) on main only.
       - name: Deploy to GitHub Pages
