@@ -26,3 +26,12 @@ export function langFromPath(pathname: string): LangCode | null {
   }
   return null;
 }
+
+/** Languages that have their own privacy / terms / about pages. */
+export const LEGAL_LANGS: LangCode[] = ['en', 'zh-HK', 'zh-CN'];
+
+/** Link to a static content page (guide, legal) for the current language. */
+export function contentHref(base: string, lang: LangCode, rest: string, legal = false): string {
+  const l = legal && !LEGAL_LANGS.includes(lang) ? 'en' : lang;
+  return `${base}${LANG_SLUGS[l] ? `${LANG_SLUGS[l]}/` : ''}${rest}`;
+}

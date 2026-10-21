@@ -1,19 +1,42 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { useStore, type Lang } from '../state/store';
 import en, { type Dict } from './locales/en';
-import zhHK from './locales/zh-HK';
-import zhCN from './locales/zh-CN';
-import ja from './locales/ja';
-import ko from './locales/ko';
-import th from './locales/th';
-import es from './locales/es';
-import fr from './locales/fr';
-import de from './locales/de';
 
 export type Key = keyof Dict;
 type Partial = { [K in Key]?: string };
 
-const DICTS: Record<Lang, Partial> = { en, 'zh-HK': zhHK, 'zh-CN': zhCN, ja, ko, th, es, fr, de };
+// English is bundled (it's also the fallback); other languages load on demand.
+const LOADERS: Record<Exclude<Lang, 'en'>, () => Promise<{ default: Partial }>> = {
+  'zh-HK': () => import('./locales/zh-HK'),
+  'zh-CN': () => import('./locales/zh-CN'),
+  ja: () => import('./locales/ja'),
+  ko: () => import('./locales/ko'),
+  th: () => import('./locales/th'),
+  es: () => import('./locales/es'),
+  fr: () => import('./locales/fr'),
+  de: () => import('./locales/de'),
+};
+const DICTS: { [L in Lang]?: Partial } = { en };
+const pending = new Map<Lang, Promise<void>>();
+const subs = new Set<() => void>();
+
+export function loadLang(lang: Lang): Promise<void> {
+  if (DICTS[lang] || lang === 'en') return Promise.resolve();
+  let p = pending.get(lang);
+  if (!p) {
+    const next = LOADERS[lang as Exclude<Lang, 'en'>]()
+      .then((m) => {
+        DICTS[lang] = m.default;
+        subs.forEach((f) => f());
+      })
+      .catch(() => {
+        pending.delete(lang);
+      });
+    pending.set(lang, next);
+    p = next;
+  }
+  return p;
+}
 
 export const LANGS: { code: Lang; label: string }[] = [
   { code: 'en', label: 'English' },
@@ -44,7 +67,18 @@ export function intlLocale(lang: Lang): string {
 
 export function useI18n() {
   const lang = useStore((s) => s.settings.lang);
-  const t: TFn = useCallback((key, vars) => translate(lang, key, vars), [lang]);
+  const ready = useSyncExternalStore(
+    (f) => {
+      subs.add(f);
+      return () => subs.delete(f);
+    },
+    () => Boolean(DICTS[lang]),
+  );
+  useEffect(() => {
+    loadLang(lang);
+  }, [lang]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const t: TFn = useCallback((key, vars) => translate(lang, key, vars), [lang, ready]);
   return { t, lang, locale: intlLocale(lang) };
 }
 

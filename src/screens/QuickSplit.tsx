@@ -1,7 +1,7 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Cake, FolderPlus, Plus, RotateCcw, Share2, Users, UtensilsCrossed } from 'lucide-react';
 import { computeBill, type BillResult } from '../lib/bill';
-import { extrasFor, flagEmoji, getCountry } from '../lib/countries';
+import { COUNTRIES, extrasFor, flagEmoji, getCountry } from '../lib/countries';
 import { uid } from '../lib/id';
 import { formatMinor, parseAmount, roundToStep, roundingSteps, toMinor } from '../lib/money';
 import { quickSummaryText } from '../lib/summary';
@@ -13,7 +13,7 @@ import { CountryPicker, CurrencyPicker } from '../components/pickers';
 import { AmountInput, Avatar, Button, Chip, IconButton, Section, Segmented, Stepper, TopBar, cx, shareOrCopy, toast } from '../components/ui';
 import { SaveToGroupSheet } from './SaveToGroup';
 import { ItemRow } from '../components/ItemRow';
-import { navigate } from '../router';
+import { navigate, routeQuery } from '../router';
 import { SupportCard } from '../components/extras';
 
 export function quickSpec(q: QuickState): SplitSpec {
@@ -35,6 +35,16 @@ export function QuickSplit() {
   const [currencyOpen, setCurrencyOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const country = getCountry(q.country);
+
+  // Links from the tipping guide pages open the calculator with ?c=JP.
+  useEffect(() => {
+    const code = routeQuery().get('c')?.toUpperCase();
+    if (code && COUNTRIES.some((c) => c.code === code) && code !== q.country) {
+      const c = getCountry(code);
+      actions.setQuick({ country: c.code, currency: c.currency, extras: extrasFor(c.code), round: 0 });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const bill: BillResult = useMemo(() => computeBill(quickSpec(q), q.currency), [q]);
   const names = useMemo(

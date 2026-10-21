@@ -25,3 +25,9 @@ dist-ssr
 
 # PWA dev build
 dev-dist
+dist-e2e
+test-results
+playwright-report
+.firebase
+firestore-debug.log
+firebase-debug.log

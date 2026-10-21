@@ -1,0 +1,43 @@
+rules_version = '2';
+
+// Live groups use "capability links": the long random group id in the link is
+// the only key. Anyone with the link can read and edit that one group, but
+// nobody can list or search groups.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function validId(id) {
+      return id.size() >= 20 && id.size() <= 40 && id.matches('^[A-Za-z0-9_-]+$');
+    }
+
+    function validGroup(d) {
+      return d.keys().hasAll(['v', 'name', 'currency', 'members'])
+        && d.name is string && d.name.size() <= 200
+        && d.currency is string && d.currency.size() == 3
+        && d.members is list && d.members.size() <= 100;
+    }
+
+    function validExpense(d, expenseId) {
+      return d.keys().hasAll(['id', 'title', 'currency', 'amount', 'participants'])
+        && d.id == expenseId
+        && d.title is string && d.title.size() <= 300
+        && d.currency is string && d.currency.size() == 3
+        && d.amount is number
+        && d.participants is list && d.participants.size() <= 100
+        && (!('items' in d) || (d.items is list && d.items.size() <= 300));
+    }
+
+    match /groups/{groupId} {
+      allow get: if validId(groupId);
+      allow list: if false;
+      allow create, update: if validId(groupId) && validGroup(request.resource.data);
+      allow delete: if false;
+
+      match /expenses/{expenseId} {
+        allow read: if validId(groupId);
+        allow create, update: if validId(groupId) && expenseId.size() <= 64 && validExpense(request.resource.data, expenseId);
+        allow delete: if validId(groupId);
+      }
+    }
+  }
+}

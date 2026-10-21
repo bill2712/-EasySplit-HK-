@@ -33,8 +33,19 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png}'],
-        globIgnores: ['og-image.png'],
+        // Content pages (guide, legal, 404) are plain HTML: don't precache them
+        // and let the browser load them normally instead of the app shell.
+        globIgnores: ['og-image.png', '404.html', '**/firestore-*.js', '**/tipping/**', '**/privacy/**', '**/terms/**', '**/about/**'],
         navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/\/tipping\//, /\/(privacy|terms|about)\//, /404\.html$/],
+        // Firebase is only needed for live groups: cache it the first time it's used.
+        runtimeCaching: [
+          {
+            urlPattern: /\/assets\/firestore-.*\.js$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'easysplit-live', expiration: { maxEntries: 4 } },
+          },
+        ],
       },
     }),
   ],

@@ -92,6 +92,8 @@ export interface Group {
   simplify: boolean;
   /** Optional budget per person in the base currency (major units). */
   budget?: number;
+  /** Set when the group is shared live; the id of its online copy. */
+  cloudId?: string;
   createdAt: number;
   updatedAt: number;
 }

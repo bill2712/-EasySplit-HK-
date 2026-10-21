@@ -1,13 +1,24 @@
-import { useEffect } from 'react';
-import { intlLocale, translate } from './i18n';
+import { Suspense, lazy, useEffect } from 'react';
+import { intlLocale, useI18n } from './i18n';
 import { useStore } from './state/store';
 import { useRoute } from './router';
 import { ToastHost } from './components/ui';
 import { Home } from './screens/Home';
-import { QuickSplit } from './screens/QuickSplit';
-import { GroupScreen } from './screens/group/GroupScreen';
-import { ImportScreen } from './screens/Import';
-import { Guide } from './screens/Guide';
+
+// Everything except the home screen loads on demand to keep the first load small.
+const QuickSplit = lazy(() => import('./screens/QuickSplit').then((m) => ({ default: m.QuickSplit })));
+const GroupScreen = lazy(() => import('./screens/group/GroupScreen').then((m) => ({ default: m.GroupScreen })));
+const ImportScreen = lazy(() => import('./screens/Import').then((m) => ({ default: m.ImportScreen })));
+const Guide = lazy(() => import('./screens/Guide').then((m) => ({ default: m.Guide })));
+const JoinScreen = lazy(() => import('./screens/Join'));
+
+function Loading() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center" aria-busy="true">
+      <span className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500/30 border-t-brand-600" />
+    </div>
+  );
+}
 
 function useTheme() {
   const theme = useStore((s) => s.settings.theme);
@@ -25,20 +36,20 @@ function useTheme() {
 }
 
 function useDocumentLang(screen: string) {
-  const lang = useStore((s) => s.settings.lang);
+  const { t, lang } = useI18n();
   useEffect(() => {
     document.documentElement.lang = intlLocale(lang);
-    const name = translate(lang, 'app.name');
+    const name = t('app.name');
     // Keep the descriptive SEO title on the landing screen.
     document.title =
       screen === 'quick'
-        ? `${translate(lang, 'quick.title')} · ${name}`
+        ? `${t('quick.title')} · ${name}`
         : screen === 'guide'
-          ? `${translate(lang, 'guide.title')} · ${name}`
+          ? `${t('guide.title')} · ${name}`
           : screen === 'home'
-            ? translate(lang, 'seo.title')
+            ? t('seo.title')
             : name;
-  }, [lang, screen]);
+  }, [t, lang, screen]);
 }
 
 export default function App() {
@@ -51,11 +62,12 @@ export default function App() {
   else if (route[0] === 'g' && route[1]) screen = <GroupScreen id={route[1]} />;
   else if (route[0] === 'import' && route[1]) screen = <ImportScreen data={route[1]} />;
   else if (route[0] === 'guide') screen = <Guide />;
+  else if (route[0] === 'join' && route[1]) screen = <JoinScreen cloudId={route[1]} />;
   else screen = <Home />;
 
   return (
     <>
-      {screen}
+      <Suspense fallback={<Loading />}>{screen}</Suspense>
       <ToastHost />
     </>
   );

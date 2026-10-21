@@ -6,7 +6,7 @@ import { LANGS, countryName, useI18n } from '../i18n';
 import { actions, getState, setState, useStore, type Theme } from '../state/store';
 import { CountryPicker } from '../components/pickers';
 import { Button, Section, Segmented, Sheet, cx, toast } from '../components/ui';
-import { SupportCard } from '../components/extras';
+import { LegalLinks, SupportCard } from '../components/extras';
 
 export function downloadFile(name: string, content: string, type: string) {
   const blob = new Blob([content], { type });
@@ -20,16 +20,20 @@ export function downloadFile(name: string, content: string, type: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+/** Save every group to a JSON file and remember when we last did. */
+export function downloadBackup() {
+  const s = getState();
+  downloadFile(`easysplit-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify({ app: 'easysplit', version: 1, groups: s.groups }, null, 2), 'application/json');
+  actions.setSettings({ lastBackupAt: Date.now() });
+}
+
 export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t, lang, locale } = useI18n();
   const settings = useStore((s) => s.settings);
   const [countryOpen, setCountryOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const backup = () => {
-    const s = getState();
-    downloadFile(`easysplit-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify({ app: 'easysplit', version: 1, groups: s.groups }, null, 2), 'application/json');
-  };
+  const backup = downloadBackup;
 
   const restore = async (file: File) => {
     try {
@@ -111,6 +115,7 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
         </Section>
 
         <SupportCard />
+        <LegalLinks />
       </div>
       <CountryPicker
         open={countryOpen}

@@ -16,6 +16,7 @@ import { Balances } from './Balances';
 import { ExpenseEditor } from './ExpenseEditor';
 import { People } from './People';
 import { Stats } from './Stats';
+import { LiveBadge, LiveMenu, liveUrl } from './Live';
 
 type Tab = 'expenses' | 'balances' | 'stats' | 'people';
 
@@ -66,7 +67,12 @@ export function GroupScreen({ id }: { id: string }) {
             <span className="truncate">{group.name}</span>
           </span>
         }
-        sub={t('home.groupMeta', { people: group.members.length, items: group.expenses.filter((e) => e.kind === 'expense').length })}
+        sub={
+          <span className="inline-flex items-center gap-2">
+            {t('home.groupMeta', { people: group.members.length, items: group.expenses.filter((e) => e.kind === 'expense').length })}
+            <LiveBadge group={group} />
+          </span>
+        }
         onBack={() => navigate('/')}
         right={
           <IconButton label={t('common.more')} onClick={() => setMenu(true)}>
@@ -145,6 +151,7 @@ export function GroupScreen({ id }: { id: string }) {
 
       <Sheet open={menu} onClose={() => setMenu(false)} title={group.name}>
         <div className="space-y-2">
+          <LiveMenu group={group} onDone={() => setMenu(false)} Item={(p) => <MenuItem key={p.label} {...p} />} />
           <MenuItem icon={<Share2 className="h-5 w-5" />} label={t('balances.shareSummary')} onClick={shareText} />
           <MenuItem icon={<Link2 className="h-5 w-5" />} label={t('group.shareLink')} hint={t('group.shareLinkHint')} onClick={shareLink} />
           <MenuItem
@@ -159,7 +166,7 @@ export function GroupScreen({ id }: { id: string }) {
           <MenuItem icon={<Download className="h-5 w-5" />} label={t('group.exportCsv')} onClick={exportCsv} />
         </div>
       </Sheet>
-      <QrSheet open={qrOpen} onClose={() => setQrOpen(false)} url={appUrl(`/import/${encodeGroup(group)}`)} title={group.name} />
+      <QrSheet open={qrOpen} onClose={() => setQrOpen(false)} url={group.cloudId ? liveUrl(group.cloudId) : appUrl(`/import/${encodeGroup(group)}`)} title={group.name} />
     </div>
   );
 }
