@@ -1,9 +1,10 @@
 import { useSyncExternalStore } from 'react';
 import { extrasFor, getCountry, guessCountry } from '../lib/countries';
 import { today, uid } from '../lib/id';
+import { langFromPath, type LangCode } from '../lib/site';
 import type { Expense, Extras, Group, GroupKind, ID, Item, Member } from '../lib/types';
 
-export type Lang = 'en' | 'zh-HK' | 'zh-CN' | 'ja' | 'ko' | 'th' | 'es' | 'fr' | 'de';
+export type Lang = LangCode;
 export type Theme = 'system' | 'light' | 'dark';
 
 export interface Settings {
@@ -27,6 +28,7 @@ export interface QuickState {
   items: Item[];
   extras: Extras;
   round: number; // step in major units, 0 = exact
+  payerId?: ID | null; // who paid the bill (optional)
 }
 
 export interface AppState {
@@ -39,6 +41,10 @@ export interface AppState {
 const STORAGE_KEY = 'easysplit:v1';
 
 export function detectLang(): Lang {
+  if (typeof location !== 'undefined') {
+    const fromPath = langFromPath(location.pathname);
+    if (fromPath) return fromPath;
+  }
   const langs = typeof navigator !== 'undefined' ? navigator.languages || [navigator.language] : ['en'];
   for (const raw of langs) {
     const l = raw.toLowerCase();
@@ -65,6 +71,7 @@ export function newQuick(country: string, names?: string[]): QuickState {
     items: [],
     extras: extrasFor(c.code),
     round: 0,
+    payerId: null,
   };
 }
 

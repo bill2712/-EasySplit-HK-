@@ -6,6 +6,7 @@ import { LANGS, countryName, useI18n } from '../i18n';
 import { actions, getState, setState, useStore, type Theme } from '../state/store';
 import { CountryPicker } from '../components/pickers';
 import { Button, Section, Segmented, Sheet, cx, toast } from '../components/ui';
+import { SupportCard } from '../components/extras';
 
 export function downloadFile(name: string, content: string, type: string) {
   const blob = new Blob([content], { type });
@@ -108,6 +109,8 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
           />
           <p className="px-1 text-xs text-zinc-500 dark:text-zinc-400">{t('home.privacy')}</p>
         </Section>
+
+        <SupportCard />
       </div>
       <CountryPicker
         open={countryOpen}

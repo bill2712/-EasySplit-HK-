@@ -15,7 +15,7 @@ export function SaveToGroupSheet({ onClose, names }: { onClose: () => void; name
   const q = useStore((s) => s.quick);
   const groups = useStore((s) => s.groups);
   const [target, setTarget] = useState<string>(groups[0]?.id ?? 'new');
-  const [payer, setPayer] = useState(q.people[0]?.id);
+  const [payer, setPayer] = useState(q.payerId ?? q.people[0]?.id);
   const [title, setTitle] = useState(t('quick.defaultTitle'));
   const [busy, setBusy] = useState(false);
 

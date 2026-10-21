@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ArrowRight, Copy, Share2 } from 'lucide-react';
+import { ArrowRight, BellRing, Copy, Share2 } from 'lucide-react';
 import { getCountry } from '../../lib/countries';
 import { formatMinor, fromMinor } from '../../lib/money';
 import { settlementPlan, settlerOf, summarize } from '../../lib/settle';
@@ -7,7 +7,9 @@ import { groupSummaryText } from '../../lib/summary';
 import type { Group } from '../../lib/types';
 import { useI18n } from '../../i18n';
 import { actions } from '../../state/store';
-import { Avatar, Button, Section, Toggle, copyText, cx, shareOrCopy, toast } from '../../components/ui';
+import { Avatar, Button, IconButton, Section, Toggle, copyText, cx, shareOrCopy, toast } from '../../components/ui';
+import { SupportCard } from '../../components/extras';
+import { SITE_URL } from '../../lib/site';
 
 export function Balances({ group }: { group: Group }) {
   const { t, locale } = useI18n();
@@ -25,6 +27,17 @@ export function Balances({ group }: { group: Group }) {
     toast(t('toast.paid'));
   };
 
+  const remind = async (from: string, to: string, amount: number) => {
+    const receiver = group.members.find((m) => m.id === to);
+    const lines = [
+      t('remind.text', { from: name(from), to: name(to), amount: money(amount), group: `${group.emoji} ${group.name}` }),
+    ];
+    if (receiver?.payInfo) lines.push(t('remind.payInfo', { info: receiver.payInfo }));
+    lines.push(t('remind.thanks'), '', `— ${t('app.name')} · ${SITE_URL}`);
+    const r = await shareOrCopy(lines.join('\n'), group.name);
+    if (r === 'copied') toast(t('toast.copied'));
+  };
+
   const share = async () => {
     const r = await shareOrCopy(groupSummaryText(group, t, locale), group.name);
     if (r === 'copied') toast(t('toast.copied'));
@@ -38,6 +51,7 @@ export function Balances({ group }: { group: Group }) {
             <p className="text-4xl">🎉</p>
             <p className="mt-2 font-semibold">{t('balances.allSettled')}</p>
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{t('balances.allSettledBody')}</p>
+            {group.expenses.length > 0 && <SupportCard compact className="mt-4" />}
           </div>
         ) : (
           <div className="card divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -65,7 +79,10 @@ export function Balances({ group }: { group: Group }) {
                     ) : (
                       <span className="truncate text-xs text-zinc-400">{apps.slice(0, 3).join(' · ')}</span>
                     )}
-                    <Button size="sm" variant="soft" className="ml-auto shrink-0" onClick={() => markPaid(tr.from, tr.to, tr.amount)}>
+                    <IconButton label={t('remind.button')} className="ml-auto h-9 w-9" onClick={() => remind(tr.from, tr.to, tr.amount)}>
+                      <BellRing className="h-4 w-4" />
+                    </IconButton>
+                    <Button size="sm" variant="soft" className="shrink-0" onClick={() => markPaid(tr.from, tr.to, tr.amount)}>
                       {t('balances.markPaid')}
                     </Button>
                   </div>

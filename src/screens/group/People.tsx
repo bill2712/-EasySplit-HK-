@@ -7,7 +7,7 @@ import { countryName, useI18n } from '../../i18n';
 import { actions, memberIsUsed } from '../../state/store';
 import { navigate } from '../../router';
 import { CountryPicker, CurrencyPicker } from '../../components/pickers';
-import { Avatar, Button, Field, IconButton, Section, TextField, cx, toast } from '../../components/ui';
+import { Avatar, Button, Field, IconButton, NumField, Section, TextField, cx, toast } from '../../components/ui';
 
 const EMOJIS = ['🍽️', '🍜', '🍣', '🍲', '🥘', '🍕', '🍻', '🎂', '🎉', '🎤', '✈️', '🏖️', '🏔️', '🚗', '⛺', '🏠', '⚽', '💼'];
 
@@ -146,6 +146,15 @@ export function People({ group }: { group: Group }) {
             </Field>
           </div>
           <p className="px-1 text-xs text-zinc-500 dark:text-zinc-400">{t('people.currencyHint')}</p>
+          <Field label={t('budget.label')} hint={t('budget.hint')}>
+            <NumField
+              value={group.budget ?? 0}
+              onChange={(v) => actions.updateGroup(group.id, (g) => ({ ...g, budget: v > 0 ? v : undefined }))}
+              suffix={group.currency}
+              ariaLabel={t('budget.label')}
+              className="py-2.5"
+            />
+          </Field>
         </div>
       </Section>
 

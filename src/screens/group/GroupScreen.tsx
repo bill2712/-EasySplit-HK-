@@ -1,15 +1,16 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { ArrowLeftRight, Download, Link2, MoreHorizontal, Plus, Share2, UserPlus } from 'lucide-react';
-import { categoryOf } from '../../lib/categories';
-import { formatMinor } from '../../lib/money';
+import { ArrowLeftRight, Download, Link2, MoreHorizontal, Plus, QrCode, Search, Share2, UserPlus } from 'lucide-react';
+import { CATEGORIES, categoryOf } from '../../lib/categories';
+import { formatMinor, toMinor } from '../../lib/money';
 import { splitExpense, summarize } from '../../lib/settle';
 import { encodeGroup } from '../../lib/share';
 import { groupCsv, groupSummaryText } from '../../lib/summary';
-import type { Expense, Group } from '../../lib/types';
-import { useI18n } from '../../i18n';
+import type { Category, Expense, Group } from '../../lib/types';
+import { useI18n, type Key } from '../../i18n';
 import { useStore } from '../../state/store';
 import { appUrl, navigate, useRoute } from '../../router';
-import { Button, EmptyState, IconButton, Segmented, Sheet, TopBar, cx, shareOrCopy, toast } from '../../components/ui';
+import { Button, Chip, EmptyState, IconButton, Segmented, Sheet, TopBar, cx, shareOrCopy, toast } from '../../components/ui';
+import { QrSheet } from '../../components/extras';
 import { downloadFile } from '../Settings';
 import { Balances } from './Balances';
 import { ExpenseEditor } from './ExpenseEditor';
@@ -25,6 +26,7 @@ export function GroupScreen({ id }: { id: string }) {
   const tab = (route[2] as Tab) || 'expenses';
   const [editing, setEditing] = useState<Expense | null | 'new' | 'transfer'>(null);
   const [menu, setMenu] = useState(false);
+  const [qrOpen, setQrOpen] = useState(false);
   const summary = useMemo(() => (group ? summarize(group) : null), [group]);
 
   if (!group || !summary) {
@@ -84,6 +86,7 @@ export function GroupScreen({ id }: { id: string }) {
             </span>
             <span>{group.currency}</span>
           </div>
+          {!!group.budget && group.members.length > 0 && <BudgetBar group={group} spent={summary.totalSpent} />}
         </div>
 
         <Segmented<Tab>
@@ -144,9 +147,39 @@ export function GroupScreen({ id }: { id: string }) {
         <div className="space-y-2">
           <MenuItem icon={<Share2 className="h-5 w-5" />} label={t('balances.shareSummary')} onClick={shareText} />
           <MenuItem icon={<Link2 className="h-5 w-5" />} label={t('group.shareLink')} hint={t('group.shareLinkHint')} onClick={shareLink} />
+          <MenuItem
+            icon={<QrCode className="h-5 w-5" />}
+            label={t('group.showQr')}
+            hint={t('qr.hint')}
+            onClick={() => {
+              setMenu(false);
+              setQrOpen(true);
+            }}
+          />
           <MenuItem icon={<Download className="h-5 w-5" />} label={t('group.exportCsv')} onClick={exportCsv} />
         </div>
       </Sheet>
+      <QrSheet open={qrOpen} onClose={() => setQrOpen(false)} url={appUrl(`/import/${encodeGroup(group)}`)} title={group.name} />
+    </div>
+  );
+}
+
+function BudgetBar({ group, spent }: { group: Group; spent: number }) {
+  const { t, locale } = useI18n();
+  const per = Math.round(spent / group.members.length);
+  const budget = toMinor(group.budget ?? 0, group.currency);
+  const pct = budget > 0 ? Math.min(100, (per / budget) * 100) : 0;
+  const over = per > budget;
+  const m = (v: number) => formatMinor(v, group.currency, locale, true);
+  return (
+    <div className="relative mt-4">
+      <div className="mb-1.5 flex justify-between text-xs text-white/70">
+        <span>{t('budget.progress', { spent: m(per), budget: m(budget) })}</span>
+        <span className={over ? 'font-semibold text-rose-300' : ''}>{over ? t('budget.over', { amount: m(per - budget) }) : `${Math.round(pct)}%`}</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-white/15">
+        <div className={cx('h-full rounded-full', over ? 'bg-rose-400' : pct > 80 ? 'bg-amber-300' : 'bg-brand-400')} style={{ width: `${pct}%` }} />
+      </div>
     </div>
   );
 }
@@ -166,9 +199,19 @@ function MenuItem({ icon, label, hint, onClick }: { icon: ReactNode; label: stri
 function ExpenseList({ group, onOpen, onAdd }: { group: Group; onOpen: (e: Expense) => void; onAdd: () => void }) {
   const { t, locale } = useI18n();
   const name = (id: string) => group.members.find((m) => m.id === id)?.name ?? '?';
+  const [query, setQuery] = useState('');
+  const [cat, setCat] = useState<Category | null>(null);
+  const usedCats = useMemo(() => CATEGORIES.filter((c) => group.expenses.some((e) => e.category === c.id)), [group]);
 
   const byDay = useMemo(() => {
-    const sorted = [...group.expenses].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+    const q = query.trim().toLowerCase();
+    const matches = (e: Expense) =>
+      (!cat || e.category === cat) &&
+      (!q ||
+        e.title.toLowerCase().includes(q) ||
+        (e.note ?? '').toLowerCase().includes(q) ||
+        [e.payerId, ...e.participants].some((id) => (group.members.find((m) => m.id === id)?.name ?? '').toLowerCase().includes(q)));
+    const sorted = group.expenses.filter(matches).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
     const days: { date: string; items: { e: Expense; base: number; own: number }[]; total: number }[] = [];
     for (const e of sorted) {
       const s = splitExpense(e, group.currency);
@@ -181,7 +224,7 @@ function ExpenseList({ group, onOpen, onAdd }: { group: Group; onOpen: (e: Expen
       if (e.kind === 'expense') d.total += s.totalBase;
     }
     return days;
-  }, [group]);
+  }, [group, query, cat]);
 
   if (group.expenses.length === 0) {
     return (
@@ -202,6 +245,27 @@ function ExpenseList({ group, onOpen, onAdd }: { group: Group; onOpen: (e: Expen
 
   return (
     <div className="space-y-5">
+      {group.expenses.length >= 5 && (
+        <div className="space-y-2">
+          <div className="field flex items-center gap-2 py-2">
+            <Search className="h-4 w-4 shrink-0 text-zinc-400" />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('expense.search')} aria-label={t('expense.search')} className="w-full bg-transparent outline-none" />
+          </div>
+          {usedCats.length > 1 && (
+            <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
+              <Chip active={!cat} onClick={() => setCat(null)}>
+                {t('common.everyone')}
+              </Chip>
+              {usedCats.map((c) => (
+                <Chip key={c.id} active={cat === c.id} onClick={() => setCat(cat === c.id ? null : c.id)}>
+                  {c.emoji} {t(`cat.${c.id}` as Key)}
+                </Chip>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      {byDay.length === 0 && <p className="py-8 text-center text-sm text-zinc-500">{t('expense.noMatch')}</p>}
       {byDay.map((day) => (
         <section key={day.date} className="space-y-2">
           <div className="flex justify-between px-1 text-[13px] font-semibold text-zinc-500 dark:text-zinc-400">
