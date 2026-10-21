@@ -1,20 +1,64 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# EasySplit 夾錢易
 
-# Run and deploy your AI Studio app
+A bill-splitting calculator for meals, gatherings and trips — built for people anywhere in the world.
 
-This contains everything you need to run your app locally.
+食飯、聚會、旅行嘅夾錢／AA 計算機：加一服務費、稅、貼士、生日主角免費、多種貨幣，一秒計清楚。
 
-View your app in AI Studio: https://ai.studio/apps/drive/14cSiueG-t_E46BoC5bpxnim7olJLtnb3
+## Features
 
-## Run Locally
+### 🍽️ Quick split — at the table
+- **Split evenly or by item.** Add each dish and tap who shared it; shared dishes are divided only among those people.
+- **Service charge, tax, tip.** HK/Macau 加一, Singapore/Malaysia/Thailand “++” (tax charged on service), US/Canada sales tax plus tip on the pre-tax subtotal, VAT already included in Europe, and more.
+- **Cover charge per person** (Italian *coperto*, table charge, tea charge) and **discounts** (% or fixed amount).
+- **🎂 Treat someone.** The birthday person or a guest pays nothing; everyone else covers their share evenly.
+- **Round each share up** (to $1, $5, ¥100, ₩1000 …). The app shows how much extra you collect.
+- **Sums in the amount box:** type `120+85` or `3*48`.
+- **Share** the breakdown to WhatsApp / LINE / WeChat, or **save it to a group**.
 
-**Prerequisites:**  Node.js
+### ✈️ Groups & trips — running tabs
+- Log expenses over days: who paid (one person or several) and who joined.
+- Split **equally, by shares (2× for a couple), exact amounts, percentages, or by item**, with optional service/tax/tip on each expense.
+- **Any currency per expense.** Live exchange rates (open.er-api.com, cached for offline use) convert to the group’s main currency. You can edit the rate by hand.
+- **Couples & families settle as one** (“settled together with …”).
+- **Settle up with the fewest transfers**, or show direct debts only. Tap “Mark paid” to record a payment.
+- Add each person’s payment details (PayMe, FPS, Venmo, PayNow, PromptPay, Bizum …) so they show up next to what they’re owed.
+- **Stats:** spending by category, by person (paid vs. share) and by day.
+- **Share a copy by link.** The whole group is compressed into the URL, so no server is needed. You can also export to CSV, and back up or restore everything as JSON.
 
+### 🌍 Made for everywhere
+- 30+ country presets: currency, typical service charge, VAT/GST/sales tax, tipping custom and local payment apps. Every value stays editable.
+- Correct decimals for each currency (JPY/KRW have none; TWD/IDR are rounded the way people actually pay).
+- 9 languages: English, 繁體中文, 简体中文, 日本語, 한국어, ไทย, Español, Français, Deutsch. Country and currency names are localised automatically.
+- Mobile-first, dark mode, installable as an app (PWA), and works offline.
+- Your data stays on your device. No account needed.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Tech
+
+React 19 · TypeScript · Vite · Tailwind CSS v4 · vite-plugin-pwa · Vitest
+
+```
+src/
+  lib/         pure logic: money (exact cents), bill (extras), settle (balances), countries, rates, share
+  state/       tiny store persisted to localStorage
+  i18n/        translations
+  components/  UI building blocks, pickers, charges editor
+  screens/     Home, QuickSplit, Group (expenses / settle up / stats / people), Import
+```
+
+All money maths runs in integer minor units, using largest-remainder allocation, so shares always add up exactly to the total.
+
+## Run locally
+
+```bash
+npm install
+npm run dev        # http://localhost:3000/-EasySplit-HK-/
+npm test           # unit tests for the bill & settlement maths
+npm run build      # type-check + production build
+npm run deploy     # publish dist/ to GitHub Pages by hand
+```
+
+## Deployment
+
+Every push to `main` runs the tests, builds the app and publishes `dist/` to the `gh-pages` branch through GitHub Actions (`.github/workflows/deploy.yml`). Pull requests run the tests and build only.
+
+Live site: https://bill2712.github.io/-EasySplit-HK-/

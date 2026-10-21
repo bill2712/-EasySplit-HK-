@@ -1,0 +1,112 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', 'Noto Sans',
+    'PingFang HK', 'PingFang TC', 'Microsoft JhengHei', 'Hiragino Sans', 'Apple SD Gothic Neo', 'Malgun Gothic',
+    'Noto Sans Thai', sans-serif;
+  --color-brand-50: oklch(0.98 0.02 170);
+  --color-brand-100: oklch(0.95 0.05 170);
+  --color-brand-200: oklch(0.9 0.09 170);
+  --color-brand-300: oklch(0.83 0.13 170);
+  --color-brand-400: oklch(0.75 0.15 168);
+  --color-brand-500: oklch(0.67 0.15 166);
+  --color-brand-600: oklch(0.58 0.13 166);
+  --color-brand-700: oklch(0.5 0.11 167);
+  --color-brand-800: oklch(0.42 0.09 168);
+  --color-brand-900: oklch(0.36 0.07 170);
+  --color-brand-950: oklch(0.25 0.05 172);
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-zinc-100 text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
+    font-feature-settings: 'tnum' 1;
+  }
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+  }
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+}
+
+@utility card {
+  @apply rounded-3xl border border-zinc-200/70 bg-white shadow-sm shadow-zinc-900/[0.03] dark:border-zinc-800 dark:bg-zinc-900;
+}
+
+@utility field {
+  @apply w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3.5 py-2.5 text-[15px] text-zinc-900 placeholder:text-zinc-400 transition focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-500/15 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-100 dark:focus:bg-zinc-800;
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-sheet {
+  animation: sheet-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.animate-fade {
+  animation: fade-in 0.2s ease-out;
+}
+.animate-pop {
+  animation: pop-in 0.25s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-sheet,
+  .animate-fade,
+  .animate-pop {
+    animation: none;
+  }
+}
