@@ -54,5 +54,11 @@ npm install
 npm run dev        # http://localhost:3000/-EasySplit-HK-/
 npm test           # unit tests for the bill & settlement maths
 npm run build      # type-check + production build
-npm run deploy     # publish dist/ to GitHub Pages
+npm run deploy     # publish dist/ to GitHub Pages by hand
 ```
+
+## Deployment
+
+Every push to `main` runs the tests, builds the app and publishes `dist/` to the `gh-pages` branch through GitHub Actions (`.github/workflows/deploy.yml`). Pull requests run the tests and build only.
+
+Live site: https://bill2712.github.io/-EasySplit-HK-/
