@@ -90,6 +90,8 @@ export interface Group {
   /** Last-used exchange rates: 1 unit of key currency = value in base currency. */
   rates: Record<string, number>;
   simplify: boolean;
+  /** Optional budget per person in the base currency (major units). */
+  budget?: number;
   createdAt: number;
   updatedAt: number;
 }

@@ -25,6 +25,18 @@ A bill-splitting calculator for meals, gatherings and trips — built for people
 - **Stats:** spending by category, by person (paid vs. share) and by day.
 - **Share a copy by link.** The whole group is compressed into the URL, so no server is needed. You can also export to CSV, and back up or restore everything as JSON.
 
+### 🧭 More
+- **Tipping & service charge guide** for 30+ countries, one tap to use it in the calculator.
+- **QR code** to hand a group to friends at the table, and **reminder messages** (with payment details) for whoever still owes.
+- **Who paid** in the quick calculator, **trip budget per person**, **search & filter** expenses, **duplicate** an expense.
+- Install button (PWA) and an FAQ.
+
+### 🔎 SEO
+The build (`seo/plugin.ts`) writes a crawlable landing page for each language (`/`, `/zh-hk/`, `/zh-cn/`, `/ja/`, `/ko/`, `/th/`, `/es/`, `/fr/`, `/de/`). Each page has a localised title and description, FAQ, tipping table, hreflang links, Open Graph image and JSON-LD (WebApplication + FAQPage). The build also writes `sitemap.xml` and `robots.txt`.
+
+### ☕ Support
+EasySplit is free and ad-free. If it helps you, you can support it on [Ko-fi](https://ko-fi.com/beyond01hk).
+
 ### 🌍 Made for everywhere
 - 30+ country presets: currency, typical service charge, VAT/GST/sales tax, tipping custom and local payment apps. Every value stays editable.
 - Correct decimals for each currency (JPY/KRW have none; TWD/IDR are rounded the way people actually pay).

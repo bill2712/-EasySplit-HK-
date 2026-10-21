@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowRight, Calculator, ChevronRight, Plus, Settings2, X } from 'lucide-react';
+import { ArrowRight, BookOpen, Calculator, ChevronDown, ChevronRight, Plus, Settings2, X } from 'lucide-react';
 import { flagEmoji, getCountry } from '../lib/countries';
 import { formatMinor } from '../lib/money';
 import { summarize } from '../lib/settle';
@@ -10,6 +10,7 @@ import { navigate } from '../router';
 import { CountryPicker, CurrencyPicker } from '../components/pickers';
 import { Avatar, Button, Field, Section, Sheet, TextField, cx } from '../components/ui';
 import { SettingsSheet } from './Settings';
+import { InstallButton, SupportCard } from '../components/extras';
 
 const KINDS: { kind: GroupKind; emoji: string; label: Key; hint: Key }[] = [
   { kind: 'meal', emoji: '🍽️', label: 'kind.meal', hint: 'kind.mealHint' },
@@ -22,6 +23,15 @@ const FEATURES: { emoji: string; title: Key; body: Key }[] = [
   { emoji: '🌍', title: 'home.feat1Title', body: 'home.feat1Body' },
   { emoji: '💱', title: 'home.feat2Title', body: 'home.feat2Body' },
   { emoji: '🤝', title: 'home.feat3Title', body: 'home.feat3Body' },
+];
+
+export const FAQ: [Key, Key][] = [
+  ['faq.q1', 'faq.a1'],
+  ['faq.q2', 'faq.a2'],
+  ['faq.q3', 'faq.a3'],
+  ['faq.q4', 'faq.a4'],
+  ['faq.q5', 'faq.a5'],
+  ['faq.q6', 'faq.a6'],
 ];
 
 export function Home() {
@@ -49,6 +59,8 @@ export function Home() {
             <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('app.tagline')}</p>
           </div>
         </div>
+        <div className="flex items-center gap-2">
+        <InstallButton />
         <button
           type="button"
           aria-label={t('settings.title')}
@@ -57,6 +69,7 @@ export function Home() {
         >
           <Settings2 className="h-5 w-5" />
         </button>
+        </div>
       </header>
 
       <main className="mx-auto max-w-2xl space-y-7 px-4 pt-3">
@@ -159,6 +172,37 @@ export function Home() {
             </div>
           ))}
         </section>
+
+        <button
+          type="button"
+          onClick={() => navigate('/guide')}
+          className="card flex w-full items-center gap-3 p-4 text-left transition hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
+        >
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-sky-50 text-sky-700 dark:bg-sky-500/15 dark:text-sky-200">
+            <BookOpen className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold">{t('guide.title')}</span>
+            <span className="block text-sm text-zinc-500 dark:text-zinc-400">{t('home.guideBody')}</span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-zinc-300 dark:text-zinc-600" />
+        </button>
+
+        <Section title={t('faq.title')}>
+          <div className="card divide-y divide-zinc-100 overflow-hidden dark:divide-zinc-800">
+            {FAQ.map(([q, a]) => (
+              <details key={q} className="group px-4 py-3 [&_summary::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 font-medium">
+                  <span>{t(q)}</span>
+                  <ChevronDown className="h-4 w-4 shrink-0 text-zinc-400 transition group-open:rotate-180" />
+                </summary>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">{t(a)}</p>
+              </details>
+            ))}
+          </div>
+        </Section>
+
+        <SupportCard />
 
         <p className="pb-4 text-center text-xs text-zinc-400">{t('home.privacy')}</p>
       </main>

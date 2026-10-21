@@ -14,6 +14,7 @@ import { AmountInput, Avatar, Button, Chip, IconButton, Section, Segmented, Step
 import { SaveToGroupSheet } from './SaveToGroup';
 import { ItemRow } from '../components/ItemRow';
 import { navigate } from '../router';
+import { SupportCard } from '../components/extras';
 
 export function quickSpec(q: QuickState): SplitSpec {
   return {
@@ -64,6 +65,7 @@ export function QuickSplit() {
       return {
         people,
         treated: cur.treated.filter((id) => ids.has(id)),
+        payerId: cur.payerId && ids.has(cur.payerId) ? cur.payerId : null,
         items: cur.items.map((it) => ({ ...it, who: it.who.filter((w) => ids.has(w)) })),
       };
     });
@@ -90,6 +92,7 @@ export function QuickSplit() {
       serviceRate: q.extras.service,
       taxRate: q.extras.tax,
       tipRate: q.extras.tipType === 'percent' ? q.extras.tip : null,
+      payerId: q.payerId,
     });
     const r = await shareOrCopy(text, t('share.billTitle'));
     if (r === 'copied') toast(t('toast.copied'));
@@ -232,6 +235,19 @@ export function QuickSplit() {
           </div>
         </Section>
 
+        <Section title={t('quick.paidBy')}>
+          <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
+            <Chip active={!q.payerId} onClick={() => actions.setQuick({ payerId: null })}>
+              {t('quick.paidByNone')}
+            </Chip>
+            {q.people.map((p) => (
+              <Chip key={p.id} active={q.payerId === p.id} onClick={() => actions.setQuick({ payerId: p.id })}>
+                {names[p.id]}
+              </Chip>
+            ))}
+          </div>
+        </Section>
+
         <Section title={t('quick.rounding')}>
           <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
             <Chip active={!q.round} onClick={() => actions.setQuick({ round: 0 })}>
@@ -260,6 +276,11 @@ export function QuickSplit() {
                 {!!bill.includedTax && (
                   <p className="text-right text-xs text-zinc-500">{t('bill.inclTax', { amount: money(bill.includedTax) })}</p>
                 )}
+                {q.payerId && names[q.payerId] && (
+                  <p className="rounded-xl bg-zinc-100 px-3 py-2 text-[13px] font-medium dark:bg-zinc-800">
+                    👉 {t('quick.payToShare', { name: names[q.payerId] })}
+                  </p>
+                )}
                 {stepMinor > 0 && surplus > 0 && (
                   <p className="rounded-xl bg-brand-50 px-3 py-2 text-[13px] text-brand-800 dark:bg-brand-500/10 dark:text-brand-200">
                     {t('quick.roundNote', { collected: money(collected), extra: money(surplus) })}
@@ -274,6 +295,9 @@ export function QuickSplit() {
                   <Share2 className="h-5 w-5" /> {t('common.share')}
                 </Button>
               </div>
+            </div>
+            <div className="pt-1 text-center">
+              <SupportCard compact />
             </div>
           </Section>
         )}

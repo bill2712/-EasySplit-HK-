@@ -3,6 +3,7 @@ import type { BillResult } from './bill';
 import { getCountry } from './countries';
 import { formatMinor, fromMinor } from './money';
 import { settlementPlan, splitExpense, summarize } from './settle';
+import { SITE_URL } from './site';
 import type { Expense, Group } from './types';
 
 export function quickSummaryText(opts: {
@@ -16,6 +17,7 @@ export function quickSummaryText(opts: {
   serviceRate: number;
   taxRate: number;
   tipRate: number | null;
+  payerId?: string | null;
 }): string {
   const { t, locale, bill, names, rounded, treated } = opts;
   const m = (v: number) => formatMinor(v, bill.currency, locale);
@@ -28,15 +30,18 @@ export function quickSummaryText(opts: {
   if (bill.totals.tip) lines.push(`${t('extras.tip')}${opts.tipRate ? ` ${opts.tipRate}%` : ''}: ${m(bill.totals.tip)}`);
   if (bill.totals.cover) lines.push(`${t('extras.cover')}: ${m(bill.totals.cover)}`);
   lines.push(`💰 ${t('bill.total')}: ${m(bill.totals.total)}`, '');
+  const payer = opts.payerId && names[opts.payerId] ? opts.payerId : null;
   if (opts.equalEach !== null) {
     lines.push(`👥 ${t('quick.eachPays', { n: bill.participants.length })}: ${m(opts.equalEach)}`);
+    if (payer) lines.push(`👉 ${t('quick.payToShare', { name: names[payer] })}`);
   } else {
+    if (payer) lines.push(`👉 ${t('quick.payToShare', { name: names[payer] })}`);
     for (const p of bill.participants) {
       const label = treated.includes(p) ? `🎂 ${t('quick.treated')}` : m(rounded[p] ?? bill.lines[p].total);
       lines.push(`• ${names[p]}: ${label}`);
     }
   }
-  lines.push('', `— ${t('app.name')}`);
+  lines.push('', `— ${t('app.name')} · ${SITE_URL}`);
   return lines.join('\n');
 }
 
@@ -59,7 +64,7 @@ export function groupSummaryText(g: Group, t: TFn, locale: string): string {
   }
   const apps = getCountry(g.country).payApps.slice(0, 3).join(' / ');
   if (plan.length && apps) lines.push('', `💸 ${apps}`);
-  lines.push('', `— ${t('app.name')}`);
+  lines.push('', `— ${t('app.name')} · ${SITE_URL}`);
   return lines.join('\n');
 }
 

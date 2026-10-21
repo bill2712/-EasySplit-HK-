@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Cake, Check, ChevronDown, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { Cake, Check, ChevronDown, Copy, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { computeBill, hasExtras, splitSubtotal } from '../../lib/bill';
 import { CATEGORIES } from '../../lib/categories';
 import { COUNTRIES, extrasFor } from '../../lib/countries';
@@ -131,6 +131,14 @@ export function ExpenseEditor({
     onClose();
   };
 
+  // Copy an existing expense (e.g. the same taxi ride twice) dated today.
+  const duplicate = () => {
+    if (!expense) return;
+    actions.saveExpense(group.id, { ...expense, id: uid(), date: today(), createdAt: Date.now() });
+    toast(t('toast.duplicated'));
+    onClose();
+  };
+
   const remove = () => {
     if (!expense) return;
     if (!window.confirm(t('expense.confirmDelete'))) return;
@@ -176,6 +184,12 @@ export function ExpenseEditor({
             {!isNew && (
               <Button variant="danger" onClick={remove} className="px-3">
                 <Trash2 className="h-5 w-5" />
+              </Button>
+            )}
+            {!isNew && (
+              <Button variant="secondary" onClick={duplicate} className="px-3">
+                <Copy className="h-5 w-5" />
+                <span className="sr-only">{t('expense.duplicate')}</span>
               </Button>
             )}
             <Button className="flex-1" onClick={save} disabled={!!error}>
