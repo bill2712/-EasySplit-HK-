@@ -381,6 +381,11 @@ const es: Partial<Dict> = {
   "live.joinBody": "Únete para ver este grupo en tu dispositivo. Los cambios que hagas se comparten con todos.",
   "live.error": "No se pudo conectar. Revisa tu conexión e inténtalo de nuevo.",
   "live.shareText": "Únete a «{name}» en EasySplit para apuntar los gastos juntos:",
+  "common.back": "Atrás",
+  "common.close": "Cerrar",
+  "error.title": "Algo salió mal",
+  "error.body": "Lo sentimos, esta pantalla tuvo un problema. Tus grupos siguen a salvo en este dispositivo.",
+  "error.reload": "Volver al inicio",
 };
 
 export default es;

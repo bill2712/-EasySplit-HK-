@@ -381,6 +381,11 @@ const ko: Partial<Dict> = {
   "live.joinBody": "참여하면 이 기기에서 모임을 볼 수 있어요. 내가 바꾼 내용은 모두에게 공유돼요.",
   "live.error": "연결할 수 없어요. 인터넷 연결을 확인하고 다시 시도하세요.",
   "live.shareText": "EasySplit에서 \"{name}\" 지출을 함께 기록해요:",
+  "common.back": "뒤로",
+  "common.close": "닫기",
+  "error.title": "문제가 발생했어요",
+  "error.body": "이 화면에서 오류가 났어요. 모임 데이터는 기기에 안전하게 저장돼 있어요.",
+  "error.reload": "홈으로",
 };
 
 export default ko;

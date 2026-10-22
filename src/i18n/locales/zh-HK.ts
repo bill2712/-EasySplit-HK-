@@ -381,6 +381,11 @@ const zhHK: Partial<Dict> = {
   "live.joinBody": "加入後就可以喺你部機睇到呢個帳本，你改嘅嘢會同所有人共享。",
   "live.error": "連唔到伺服器，請檢查網絡再試。",
   "live.shareText": "一齊喺夾錢易記「{name}」嘅數：",
+  "common.back": "返回",
+  "common.close": "關閉",
+  "error.title": "出咗少少問題",
+  "error.body": "唔好意思，呢個畫面出錯咗。你嘅帳本仍然安全咁存喺部機度。",
+  "error.reload": "返回首頁",
 };
 
 export default zhHK;

@@ -2,6 +2,7 @@ import { useSyncExternalStore } from 'react';
 import { extrasFor, getCountry, guessCountry } from '../lib/countries';
 import { today, uid } from '../lib/id';
 import { langFromPath, type LangCode } from '../lib/site';
+import { normalizeGroup } from '../lib/normalize';
 import type { Expense, Extras, Group, GroupKind, ID, Item, Member } from '../lib/types';
 
 export type Lang = LangCode;
@@ -94,11 +95,13 @@ function load(): AppState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return fresh;
     const saved = JSON.parse(raw) as Partial<AppState>;
+    const settings = { ...fresh.settings, ...saved.settings };
+    const quickBase = newQuick(settings.country);
     return {
       version: 1,
-      settings: { ...fresh.settings, ...saved.settings },
-      groups: Array.isArray(saved.groups) ? saved.groups : [],
-      quick: saved.quick ? { ...fresh.quick, ...saved.quick, extras: { ...fresh.quick.extras, ...saved.quick.extras } } : fresh.quick,
+      settings,
+      groups: Array.isArray(saved.groups) ? saved.groups.map(normalizeGroup).filter((g): g is Group => !!g) : [],
+      quick: saved.quick ? { ...quickBase, ...saved.quick, extras: { ...quickBase.extras, ...saved.quick.extras } } : quickBase,
     };
   } catch {
     return fresh;
@@ -207,7 +210,8 @@ export const actions = {
         const exists = s.groups.some((x) => x.id === g.id);
         return { ...s, groups: exists ? s.groups.map((x) => (x.id === g.id ? g : x)) : [g, ...s.groups] };
       }
-      return { ...s, groups: [{ ...g, id: uid(), updatedAt: Date.now() }, ...s.groups] };
+      // A copy is a separate group: it must not stay linked to the original's live copy.
+      return { ...s, groups: [{ ...g, id: uid(), cloudId: undefined, updatedAt: Date.now() }, ...s.groups] };
     });
   },
 

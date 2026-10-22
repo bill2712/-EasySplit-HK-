@@ -6,6 +6,7 @@ import type { FirebaseOptions } from 'firebase/app';
 import { cloudEnabled, emulatorHost, firebaseConfig } from '../lib/cloud/config';
 import { diffGroup, groupFromRemote, mergeRemote, sameMeta, metaOf, stableStringify, type GroupMeta } from '../lib/cloud/model';
 import { uid } from '../lib/id';
+import { normalizeExpense, normalizeGroup } from '../lib/normalize';
 import type { Expense, Group } from '../lib/types';
 import { getState, onStateChange, setState } from './store';
 
@@ -52,7 +53,7 @@ let applyingRemote = false;
 function applyRemote(localId: string, meta: GroupMeta, expenses: Expense[]) {
   const cur = getState().groups.find((g) => g.id === localId);
   if (!cur?.cloudId) return;
-  const merged = mergeRemote(cur, meta, expenses);
+  const merged = normalizeGroup(mergeRemote(cur, meta, expenses.map((e, i) => normalizeExpense(e, cur.currency, i)))) ?? cur;
   if (sameMeta(metaOf(merged), metaOf(cur)) && stableStringify(merged.expenses) === stableStringify(cur.expenses)) return;
   applyingRemote = true;
   try {
@@ -152,7 +153,8 @@ export async function fetchShared(cloudId: string) {
 export function joinShared(cloudId: string, meta: GroupMeta, expenses: Expense[]): string {
   const existing = getState().groups.find((g) => g.cloudId === cloudId);
   if (existing) return existing.id;
-  const g = groupFromRemote(uid(), cloudId, meta, expenses);
+  const g = normalizeGroup(groupFromRemote(uid(), cloudId, meta, expenses.map((e, i) => normalizeExpense(e, meta.currency, i))));
+  if (!g) throw new Error('Invalid group');
   setState((s) => ({ ...s, groups: [g, ...s.groups] }));
   return g.id;
 }

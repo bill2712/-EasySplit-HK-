@@ -381,6 +381,11 @@ const ja: Partial<Dict> = {
   "live.joinBody": "参加するとこの端末でグループを見られます。あなたの変更は全員に共有されます。",
   "live.error": "接続できませんでした。インターネット接続を確認して再試行してください。",
   "live.shareText": "EasySplit で「{name}」の支出を一緒に記録しよう：",
+  "common.back": "戻る",
+  "common.close": "閉じる",
+  "error.title": "問題が発生しました",
+  "error.body": "この画面でエラーが起きました。グループのデータは端末に安全に保存されています。",
+  "error.reload": "ホームに戻る",
 };
 
 export default ja;

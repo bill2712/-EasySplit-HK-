@@ -70,8 +70,12 @@ export default function JoinScreen({ cloudId }: { cloudId: string }) {
               className="w-full"
               size="lg"
               onClick={() => {
-                const id = joinShared(cloudId, state.meta, state.expenses);
-                navigate(`/g/${id}`, true);
+                try {
+                  const id = joinShared(cloudId, state.meta, state.expenses);
+                  navigate(`/g/${id}`, true);
+                } catch {
+                  setState('error');
+                }
               }}
             >
               {t('live.join')}

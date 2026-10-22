@@ -52,6 +52,8 @@ export function LiveMenu({
   };
 
   const turnOn = async () => {
+    // Publishing waits for the server, so don't start it offline.
+    if (!navigator.onLine) return toast(t('live.error'));
     setBusy(true);
     try {
       const id = await goLive(group.id);
