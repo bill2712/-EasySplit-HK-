@@ -36,6 +36,7 @@ jobs:
           key: firebase-emulators-${{ hashFiles('package-lock.json') }}
 
       - run: npm ci
+      - run: npm run lint
       - run: npm test
 
       - name: Live sharing tests (Firestore emulator)

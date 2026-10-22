@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ChevronLeft, Minus, Plus, X } from 'lucide-react';
 import { parseAmount } from '../lib/money';
+import { useI18n } from '../i18n';
 
 export function cx(...c: (string | false | null | undefined)[]) {
   return c.filter(Boolean).join(' ');
@@ -9,11 +10,12 @@ export function cx(...c: (string | false | null | undefined)[]) {
 // ---------- layout ----------
 
 export function TopBar({ title, onBack, right, sub }: { title: ReactNode; onBack?: () => void; right?: ReactNode; sub?: ReactNode }) {
+  const { t } = useI18n();
   return (
     <header className="sticky top-0 z-30 border-b border-zinc-200/60 bg-zinc-100/85 backdrop-blur-xl dark:border-zinc-800/60 dark:bg-zinc-950/85">
       <div className="mx-auto flex h-14 max-w-2xl items-center gap-1 px-2">
         {onBack ? (
-          <IconButton label="Back" onClick={onBack}>
+          <IconButton label={t('common.back')} onClick={onBack}>
             <ChevronLeft className="h-6 w-6" />
           </IconButton>
         ) : (
@@ -270,7 +272,7 @@ export function Segmented<T extends string>({
           onClick={() => onChange(o.value)}
           className={cx(
             'min-w-0 flex-1 truncate whitespace-nowrap rounded-xl font-semibold transition',
-            size === 'sm' ? 'px-1.5 py-1.5 text-[13px]' : 'px-3 py-2 text-sm',
+            size === 'sm' ? 'px-1 py-1.5 text-[13px]' : 'px-3 py-2 text-sm',
             value === o.value
               ? 'bg-white text-zinc-900 shadow-sm dark:bg-zinc-600 dark:text-white'
               : 'text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200',
@@ -393,6 +395,8 @@ export function Avatar({ name, id, size = 'md', badge }: { name: string; id: str
 
 // ---------- sheet ----------
 
+const sheetStack: object[] = [];
+
 export function Sheet({
   open,
   onClose,
@@ -408,17 +412,26 @@ export function Sheet({
   footer?: ReactNode;
   wide?: boolean;
 }) {
+  const { t } = useI18n();
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    // Only the top-most sheet reacts to Escape (a picker opened from an editor
+    // must not close the editor and lose what was typed).
+    const token = {};
+    sheetStack.push(token);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && sheetStack[sheetStack.length - 1] === token) closeRef.current();
+    };
     window.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       window.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prev;
+      sheetStack.splice(sheetStack.indexOf(token), 1);
+      if (sheetStack.length === 0) document.body.style.overflow = '';
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
   return (
@@ -433,7 +446,7 @@ export function Sheet({
         <div className="flex items-center gap-2 px-5 pb-2 pt-4">
           <div className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-zinc-300 dark:bg-zinc-700 sm:hidden" />
           <h2 className="min-w-0 flex-1 truncate text-lg font-bold">{title}</h2>
-          <IconButton label="Close" onClick={onClose} className="-mr-2">
+          <IconButton label={t('common.close')} onClick={onClose} className="-mr-2">
             <X className="h-5 w-5" />
           </IconButton>
         </div>

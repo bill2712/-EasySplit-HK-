@@ -137,9 +137,16 @@ export function directTransfers(group: Group): Transfer[] {
   for (const e of group.expenses) {
     const s = splitExpense(e, group.currency);
     const payers = Object.keys(s.paid);
+    // Split each person's share across the payers using what each payer is still
+    // owed, so every payer gets back exactly what they paid (no lost cents).
+    const remaining = payers.map((p) => s.paid[p]);
     for (const [who, share] of Object.entries(s.shares)) {
-      const parts = allocate(share, payers.map((p) => s.paid[p]));
-      payers.forEach((p, i) => add(settlerOf(group, who), settlerOf(group, p), parts[i]));
+      if (share <= 0) continue;
+      const parts = allocate(share, remaining);
+      payers.forEach((p, i) => {
+        remaining[i] -= parts[i];
+        add(settlerOf(group, who), settlerOf(group, p), parts[i]);
+      });
     }
   }
   const out: Transfer[] = [];

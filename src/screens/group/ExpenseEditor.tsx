@@ -4,7 +4,7 @@ import { computeBill, hasExtras, splitSubtotal } from '../../lib/bill';
 import { CATEGORIES } from '../../lib/categories';
 import { COUNTRIES, extrasFor } from '../../lib/countries';
 import { today, uid } from '../../lib/id';
-import { formatMinor, fromMinor, parseAmount, toMinor } from '../../lib/money';
+import { allocate, formatMinor, fromMinor, parseAmount, toMinor } from '../../lib/money';
 import { niceRate, rateToBase } from '../../lib/rates';
 import type { Expense, Group, SplitMode } from '../../lib/types';
 import { useI18n, type Key } from '../../i18n';
@@ -109,7 +109,7 @@ export function ExpenseEditor({
   let error: string | null = null;
   if (e.participants.length === 0) error = t('expense.errNoOne');
   else if (total <= 0) error = t('expense.errAmount');
-  else if (e.mode === 'percent' && Math.abs(pctSum - 100) > 0.01) error = t('expense.errPercent', { sum: Math.round(pctSum * 100) / 100 });
+  else if (e.mode === 'percent' && Math.round(pctSum * 100) !== 10000) error = t('expense.errPercent', { sum: Math.round(pctSum * 100) / 100 });
   else if (multiPaid && paidSum !== total) error = t('expense.errPaid', { diff: money(total - paidSum) });
   else if (foreign && !(e.rate > 0)) error = t('expense.errRate');
   else if (isTransfer && e.payerId === e.participants[0]) error = t('expense.errSelf');
@@ -158,11 +158,15 @@ export function ExpenseEditor({
     }
     if (mode === 'exact' || mode === 'percent' || mode === 'shares') {
       const w: Record<string, number> = {};
-      const n = e.participants.length || 1;
-      e.participants.forEach((p) => {
+      const people = e.participants;
+      // Even starting values that add up exactly (e.g. 33.33 / 33.33 / 33.34 %).
+      const even = (total: number) => allocate(Math.round(total * 100), people.map(() => 1)).map((c) => c / 100);
+      const pct = even(100);
+      const amt = even(e.amount || 0);
+      people.forEach((p, i) => {
         if (mode === 'shares') w[p] = 1;
-        if (mode === 'percent') w[p] = Math.round((100 / n) * 100) / 100;
-        if (mode === 'exact') w[p] = Math.round(((e.amount || 0) / n) * 100) / 100;
+        if (mode === 'percent') w[p] = pct[i];
+        if (mode === 'exact') w[p] = amt[i];
       });
       patch.weights = w;
     }
@@ -395,7 +399,7 @@ export function ExpenseEditor({
                   );
                 })}
               </div>
-              {e.mode === 'percent' && Math.abs(pctSum - 100) > 0.01 && (
+              {e.mode === 'percent' && Math.round(pctSum * 100) !== 10000 && (
                 <p className="px-1 text-right text-xs font-medium text-rose-600">{t('expense.pctLeft', { pct: Math.round((100 - pctSum) * 100) / 100 })}</p>
               )}
 

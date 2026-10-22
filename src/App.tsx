@@ -4,6 +4,7 @@ import { useStore } from './state/store';
 import { useRoute } from './router';
 import { ToastHost } from './components/ui';
 import { Home } from './screens/Home';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Everything except the home screen loads on demand to keep the first load small.
 const QuickSplit = lazy(() => import('./screens/QuickSplit').then((m) => ({ default: m.QuickSplit })));
@@ -67,7 +68,9 @@ export default function App() {
 
   return (
     <>
-      <Suspense fallback={<Loading />}>{screen}</Suspense>
+      <ErrorBoundary key={route.join('/')}>
+        <Suspense fallback={<Loading />}>{screen}</Suspense>
+      </ErrorBoundary>
       <ToastHost />
     </>
   );

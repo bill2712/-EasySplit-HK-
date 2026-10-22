@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Download, Upload } from 'lucide-react';
 import { flagEmoji } from '../lib/countries';
 import type { Group } from '../lib/types';
+import { normalizeGroup } from '../lib/normalize';
 import { LANGS, countryName, useI18n } from '../i18n';
 import { actions, getState, setState, useStore, type Theme } from '../state/store';
 import { CountryPicker } from '../components/pickers';
@@ -38,8 +39,9 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
   const restore = async (file: File) => {
     try {
       const data = JSON.parse(await file.text());
-      const groups: Group[] = Array.isArray(data?.groups) ? data.groups : [];
-      if (!groups.length || !groups.every((g) => g && g.id && Array.isArray(g.members) && Array.isArray(g.expenses))) throw new Error('bad');
+      const raw: unknown[] = Array.isArray(data?.groups) ? data.groups : [];
+      const groups = raw.map(normalizeGroup).filter((g): g is Group => !!g);
+      if (!groups.length || groups.length !== raw.length) throw new Error('bad');
       setState((s) => {
         const ids = new Set(groups.map((g) => g.id));
         return { ...s, groups: [...groups, ...s.groups.filter((g) => !ids.has(g.id))] };

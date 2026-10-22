@@ -28,7 +28,7 @@ export function Guide() {
     return s ? rows.filter((r) => r.name.toLowerCase().includes(s) || r.c.currency.toLowerCase().includes(s) || r.c.code.toLowerCase() === s) : rows;
   }, [q, locale, t]);
 
-  const useCountry = (code: string) => {
+  const pickCountry = (code: string) => {
     const c = getCountry(code);
     actions.setQuick({ country: c.code, currency: c.currency, extras: extrasFor(c.code), round: 0 });
     navigate('/quick');
@@ -91,7 +91,7 @@ export function Guide() {
                   ))}
                   <button
                     type="button"
-                    onClick={() => useCountry(c.code)}
+                    onClick={() => pickCountry(c.code)}
                     className="ml-auto inline-flex items-center gap-1 text-sm font-semibold text-brand-700 dark:text-brand-300"
                   >
                     {t('guide.useThis')} <ArrowRight className="h-4 w-4" />

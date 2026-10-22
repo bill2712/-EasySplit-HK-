@@ -379,6 +379,11 @@ const en = {
   "live.joinBody": "Join to see this group on your device. Changes you make are shared with everyone in it.",
   "live.error": "Couldn’t connect. Check your internet connection and try again.",
   "live.shareText": "Join “{name}” on EasySplit to add expenses together:",
+  "common.back": "Back",
+  "common.close": "Close",
+  "error.title": "Something went wrong",
+  "error.body": "Sorry — this screen hit a problem. Your groups are safe on this device.",
+  "error.reload": "Back to home",
 };
 
 export type Dict = typeof en;

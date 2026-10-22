@@ -54,6 +54,58 @@ test.describe('groups', () => {
   });
 });
 
+test.describe('regressions', () => {
+  test('a 3-way percentage split is valid straight away', async ({ page }) => {
+    await createGroup(page, 'Thirds', 'Amy, Ben, Cat');
+    await page.getByRole('button', { name: 'Add expense' }).last().click();
+    await page.getByLabel('Amount', { exact: true }).fill('300');
+    await page.getByRole('tab', { name: '%' }).click();
+    const save = page.getByRole('button', { name: /^Save/ });
+    await expect(save).toBeEnabled();
+    await save.click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(page.getByText('Food', { exact: true })).toBeVisible();
+  });
+
+  test('Escape in the currency picker keeps the expense being edited', async ({ page }) => {
+    await createGroup(page, 'Esc test', 'Amy, Ben');
+    await page.getByRole('button', { name: 'Add expense' }).last().click();
+    await page.getByLabel('Description').fill('Half-typed expense');
+    await page.locator('[role=dialog] button').filter({ hasText: /^[A-Z]{3}$/ }).first().click();
+    await expect(page.getByRole('heading', { name: 'Currency' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('heading', { name: 'Currency' })).toBeHidden();
+    await expect(page.getByLabel('Description')).toHaveValue('Half-typed expense');
+  });
+
+  test('group tabs fit on a small phone in German, French and Spanish', async ({ browser }) => {
+    for (const lang of ['de', 'fr', 'es', 'th']) {
+    const ctx = await browser.newContext({ viewport: { width: 360, height: 740 }, serviceWorkers: 'block' });
+    await ctx.addInitScript((lang) =>
+      localStorage.setItem(
+        'easysplit:v1',
+        JSON.stringify({
+          version: 1,
+          settings: { lang, theme: 'light', country: 'DE' },
+          groups: [{ id: 'g', name: 'Reise', emoji: '✈️', kind: 'trip', currency: 'EUR', country: 'DE', members: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }], expenses: [], rates: {}, simplify: true, createdAt: 1, updatedAt: 1 }],
+        }),
+      ),
+      lang,
+    );
+    const page = await ctx.newPage();
+    await page.goto('#/g/g');
+    const tabs = page.locator('[role=tab]');
+    for (let i = 0; i < (await tabs.count()); i++) {
+      await tabs.nth(i).click();
+      // The selected tab is bold, so check every tab in its selected state too.
+      const clipped = await tabs.evaluateAll((els) => els.filter((t) => t.scrollWidth > t.clientWidth + 1).map((t) => t.textContent));
+      expect(clipped).toEqual([]);
+    }
+    await ctx.close();
+    }
+  });
+});
+
 test.describe('live sharing', () => {
   test('two friends see each other’s expenses', async ({ page, browser }) => {
     await createGroup(page, 'Ski trip', 'Amy, Ben');

@@ -128,7 +128,7 @@ const de: Partial<Dict> = {
   'group.confirmDelete': '„{name}“ und alle Ausgaben löschen?',
 
   'tab.expenses': 'Ausgaben',
-  'tab.balances': 'Ausgleichen',
+  'tab.balances': 'Abrechnen',
   'tab.stats': 'Statistik',
   'tab.people': 'Personen',
 
@@ -381,6 +381,11 @@ const de: Partial<Dict> = {
   "live.joinBody": "Tritt bei, um die Gruppe auf deinem Gerät zu sehen. Deine Änderungen sehen alle.",
   "live.error": "Keine Verbindung. Prüfe dein Internet und versuche es erneut.",
   "live.shareText": "Tritt „{name}“ auf EasySplit bei, um Ausgaben gemeinsam zu erfassen:",
+  "common.back": "Zurück",
+  "common.close": "Schließen",
+  "error.title": "Etwas ist schiefgelaufen",
+  "error.body": "Entschuldigung, auf diesem Bildschirm ist ein Fehler aufgetreten. Deine Gruppen sind auf diesem Gerät sicher.",
+  "error.reload": "Zur Startseite",
 };
 
 export default de;

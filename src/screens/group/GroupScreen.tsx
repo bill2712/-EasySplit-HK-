@@ -96,6 +96,7 @@ export function GroupScreen({ id }: { id: string }) {
         </div>
 
         <Segmented<Tab>
+          size="sm"
           value={tab}
           onChange={setTab}
           options={[

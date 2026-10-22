@@ -121,15 +121,18 @@ export function roundingSteps(currency: string): number[] {
  */
 export function parseAmount(input: string): number | null {
   if (input == null) return null;
-  let s = String(input).trim().replace(/[\s ']/g, '');
+  let s = String(input).trim().replace(/[\s\u00a0']/g, '');
   if (!s) return null;
+  // Drop currency symbols and codes ("HK$120", "120 HKD") but keep x for multiplying.
+  s = s.replace(/\p{Sc}/gu, '').replace(/[A-WYZa-wyz]/g, '');
   s = s.replace(/[×xX]/g, '*').replace(/÷/g, '/').replace(/[−–]/g, '-');
   s = s.replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
   // Normalise number tokens: decide per token whether "," is a decimal or thousands mark.
   s = s.replace(/[\d.,]+/g, (tok) => {
     const lastComma = tok.lastIndexOf(',');
     const lastDot = tok.lastIndexOf('.');
-    if (lastComma === -1) return tok;
+    // "1.000.000" — several dots can only be thousands separators.
+    if (lastComma === -1) return /^\d{1,3}(\.\d{3}){2,}$/.test(tok) ? tok.replace(/\./g, '') : tok;
     if (lastDot > lastComma) return tok.replace(/,/g, '');
     if (lastDot !== -1) return tok.replace(/\./g, '').replace(',', '.');
     const after = tok.length - lastComma - 1;

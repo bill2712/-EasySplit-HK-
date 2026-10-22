@@ -381,6 +381,11 @@ const zhCN: Partial<Dict> = {
   "live.joinBody": "加入后即可在你的设备上查看此账本，你做的修改会与所有人共享。",
   "live.error": "无法连接，请检查网络后重试。",
   "live.shareText": "一起在夹钱易记「{name}」的账：",
+  "common.back": "返回",
+  "common.close": "关闭",
+  "error.title": "出了点问题",
+  "error.body": "抱歉，这个页面出错了。你的账本仍安全地保存在设备上。",
+  "error.reload": "返回首页",
 };
 
 export default zhCN;
